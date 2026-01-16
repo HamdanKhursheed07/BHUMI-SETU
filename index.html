@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Farm Dashboard</title>
+
+  <style>
+    :root{
+      --blue1:#2b7fc0;
+      --blue2:#1f5f94;
+      --glass: rgba(255,255,255,0.12);
+      --card: rgba(255,255,255,0.92);
+      --border: rgba(255,255,255,0.25);
+      --shadow: 0 18px 40px rgba(0,0,0,0.35);
+
+      --text:#0b1d2a;
+      --muted:#5a6b77;
+
+      --green:#22c55e;
+      --red:#ef4444;
+
+      --radius:22px;
+    }
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:22px;
+
+      /* Farm tinted background */
+      background:
+        linear-gradient(180deg, rgba(10,40,60,0.72), rgba(10,40,60,0.55)),
+        url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=60");
+      background-size:cover;
+      background-position:center;
+    }
+
+    .app{
+      width:420px;
+      max-width:95vw;
+      border-radius:28px;
+      overflow:hidden;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(16px);
+      border:1px solid rgba(255,255,255,0.18);
+      box-shadow: var(--shadow);
+    }
+
+    /* Top Bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 16px;
+      color:white;
+      background: rgba(0,0,0,0.22);
+    }
+
+    .topbar .title{
+      font-weight:900;
+      letter-spacing:0.6px;
+      opacity:0.95;
+    }
+
+    .chip{
+      padding:4px 9px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.18);
+      border:1px solid rgba(255,255,255,0.18);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .content{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    /* Weather Card (like your image) */
+    .weather-card{
+      background: linear-gradient(135deg, var(--blue1), var(--blue2));
+      color:white;
+      border-radius:26px;
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+      box-shadow: 0 16px 28px rgba(0,0,0,0.24);
+    }
+
+    .weather-card::after{
+      content:"";
+      position:absolute;
+      top:-140px;
+      right:-140px;
+      width:320px;
+      height:320px;
+      background: rgba(255,255,255,0.12);
+      transform: rotate(30deg);
+      border-radius:60px;
+    }
+
+    .weather-top{
+      position:relative;
+      z-index:2;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+
+    .place{
+      font-size:28px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    .temp{
+      font-size:74px;
+      font-weight:950;
+      line-height:1;
+      letter-spacing:-2px;
+    }
+
+    .rightWeather{
+      text-align:right;
+      margin-top:16px;
+    }
+
+    .mainIcon{
+      font-size:24px;
+      margin-bottom:8px;
+      display:block;
+    }
+
+    .warning{
+      font-size:18px;
+      font-weight:600;
+      opacity:0.92;
+      max-width:180px;
+    }
+
+    .hourly{
+      position:relative;
+      z-index:2;
+      margin-top:16px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .hour{
+      flex:1;
+      text-align:center;
+    }
+
+    .hour .t{
+      font-size:12px;
+      opacity:0.9;
+      margin-bottom:6px;
+    }
+
+    .hour .icon{
+      font-size:18px;
+      margin-bottom:6px;
+    }
+
+    .hour .deg{
+      font-size:18px;
+      font-weight:900;
+    }
+
+    .updated{
+      position:relative;
+      z-index:2;
+      margin-top:10px;
+      text-align:center;
+      font-size:12px;
+      opacity:0.85;
+    }
+
+    /* Info boxes */
+    .info-row{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+
+    .info-card{
+      background: var(--card);
+      border-radius:18px;
+      padding:12px 10px;
+      text-align:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+      border:1px solid rgba(0,0,0,0.08);
+      color:var(--text);
+    }
+
+    .info-card .label{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:0.3px;
+    }
+
+    .info-card .value{
+      margin-top:6px;
+      font-size:18px;
+      font-weight:950;
+    }
+
+    /* Notice bar */
+    .notice{
+      background: var(--card);
+      border-radius:18px;
+      padding:12px 14px;
+      font-weight:900;
+      text-align:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+      border:1px solid rgba(0,0,0,0.08);
+      letter-spacing:0.4px;
+    }
+
+    /* Control cards */
+    .control{
+      background: var(--card);
+      border-radius:22px;
+      padding:14px;
+      box-shadow: 0 12px 20px rgba(0,0,0,0.16);
+      border:1px solid rgba(0,0,0,0.08);
+    }
+
+    .control h2{
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:2px;
+      text-align:center;
+      margin-bottom:10px;
+      color:#0d2b3a;
+    }
+
+    .control-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .btn-circle{
+      width:54px;
+      height:54px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,0.08),
+                  0 12px 18px rgba(0,0,0,0.18);
+      transition: transform 0.12s ease;
+    }
+
+    .btn-circle:active{
+      transform: scale(0.96);
+    }
+
+    .btn-red{ background: radial-gradient(circle at 30% 30%, #ff7b7b, var(--red)); }
+    .btn-green{ background: radial-gradient(circle at 30% 30%, #7dffb0, var(--green)); }
+
+    .timer-box{
+      flex:1;
+      padding:14px;
+      border-radius:18px;
+      background: rgba(15,23,42,0.06);
+      border:1px solid rgba(0,0,0,0.08);
+      text-align:center;
+      font-size:34px;
+      font-weight:950;
+      letter-spacing:2px;
+      color:#0d2b3a;
+    }
+
+    /* NPK grid */
+    .npk-grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+
+    .npk{
+      background: var(--card);
+      border-radius:20px;
+      padding:12px;
+      box-shadow: 0 12px 20px rgba(0,0,0,0.16);
+      border:1px solid rgba(0,0,0,0.08);
+    }
+
+    .npk .name{
+      font-weight:950;
+      text-align:center;
+      margin-bottom:10px;
+      color:#0d2b3a;
+    }
+
+    .bar{
+      width:18px;
+      height:115px;
+      border-radius:999px;
+      background:#e7edf4;
+      border:1px solid rgba(0,0,0,0.1);
+      overflow:hidden;
+      margin:0 auto;
+      position:relative;
+    }
+
+    .fill{
+      position:absolute;
+      bottom:0;
+      left:0;
+      width:100%;
+      background: linear-gradient(to top, #ef4444 0%, #f59e0b 45%, #22c55e 100%);
+    }
+
+    .legend{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      display:inline-block;margin-right:6px;
+    }
+    .dot.g{background:#22c55e;}
+    .dot.y{background:#f59e0b;}
+    .dot.r{background:#ef4444;}
+
+    /* Action Buttons */
+    .actions{
+      display:flex;
+      gap:12px;
+    }
+
+    .action-btn{
+      flex:1;
+      border:none;
+      cursor:pointer;
+      padding:14px 14px;
+      border-radius:999px;
+      font-weight:950;
+      letter-spacing:1px;
+      background: var(--card);
+      box-shadow: 0 14px 22px rgba(0,0,0,0.20);
+      transition: transform 0.12s ease;
+    }
+
+    .action-btn:active{
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <span class="chip">◀ Back</span>
+      <div class="title">SMART FARM</div>
+      <span class="chip">📶 🔋</span>
+    </div>
+
+    <div class="content">
+
+      <!-- WEATHER CARD (REAL-TIME) -->
+      <div class="weather-card">
+        <div class="weather-top">
+          <div>
+            <div class="place" id="city">Detecting...</div>
+            <div class="temp"><span id="temp">--</span>°</div>
+          </div>
+
+          <div class="rightWeather">
+            <span class="mainIcon" id="mainIcon">☀️</span>
+            <div class="warning" id="alert">Loading weather...</div>
+          </div>
+        </div>
+
+        <div class="hourly" id="hourly"></div>
+        <div class="updated" id="updatedAt">Getting live data...</div>
+      </div>
+
+      <!-- INFO BOXES -->
+      <div class="info-row">
+        <div class="info-card">
+          <div class="label">HUMIDITY</div>
+          <div class="value" id="humidity">--%</div>
+        </div>
+        <div class="info-card">
+          <div class="label">RAINING</div>
+          <div class="value" id="raining">--</div>
+        </div>
+        <div class="info-card">
+          <div class="label">MOISTURE</div>
+          <div class="value" id="moisture">Moderate</div>
+        </div>
+      </div>
+
+      <!-- NOTICE -->
+      <div class="notice" id="note">Waiting for weather update...</div>
+
+      <!-- WATER CONTROL -->
+      <div class="control">
+        <h2>WATER</h2>
+        <div class="control-row">
+          <button class="btn-circle btn-red" id="waterStop" title="Stop Water"></button>
+          <div class="timer-box" id="waterTimer">10:00</div>
+          <button class="btn-circle btn-green" id="waterStart" title="Start Water"></button>
+        </div>
+      </div>
+
+      <!-- FERTILIZER CONTROL -->
+      <div class="control">
+        <h2>FERTILIZER</h2>
+        <div class="control-row">
+          <button class="btn-circle btn-red" id="fertStop" title="Stop Fertilizer"></button>
+          <div class="timer-box" id="fertTimer">07:00</div>
+          <button class="btn-circle btn-green" id="fertStart" title="Start Fertilizer"></button>
+        </div>
+      </div>
+
+      <!-- NPK -->
+      <div class="npk-grid">
+        <div class="npk">
+          <div class="name">Nitrogen</div>
+          <div class="bar"><div class="fill" id="nFill" style="height:78%"></div></div>
+          <div class="legend">
+            <div><span class="dot g"></span>Good</div>
+            <div><span class="dot y"></span>Moderate</div>
+            <div><span class="dot r"></span>Low</div>
+          </div>
+        </div>
+
+        <div class="npk">
+          <div class="name">Potassium</div>
+          <div class="bar"><div class="fill" id="kFill" style="height:55%"></div></div>
+        </div>
+
+        <div class="npk">
+          <div class="name">Phosphorus</div>
+          <div class="bar"><div class="fill" id="pFill" style="height:40%"></div></div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="actions">
+        <button class="action-btn" id="actionWater">WATER</button>
+        <button class="action-btn" id="actionFert">FERTILIZER</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    console.log("Script Loaded ✅");
+
+    // ===============================
+    // REAL-TIME WEATHER (GPS + Open-Meteo)
+    // ===============================
+    const cityEl = document.getElementById("city");
+    const tempEl = document.getElementById("temp");
+    const humidityEl = document.getElementById("humidity");
+    const rainingEl = document.getElementById("raining");
+    const noteEl = document.getElementById("note");
+    const hourlyEl = document.getElementById("hourly");
+    const alertEl = document.getElementById("alert");
+    const mainIconEl = document.getElementById("mainIcon");
+    const updatedAtEl = document.getElementById("updatedAt");
+
+    function formatHour(timeStr) {
+      const d = new Date(timeStr);
+      let h = d.getHours();
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12;
+      if (h === 0) h = 12;
+      return `${h}${ampm}`;
+    }
+
+    function weatherEmoji(code) {
+      if (code === 0) return "☀️";
+      if ([1, 2].includes(code)) return "⛅";
+      if (code === 3) return "☁️";
+      if ([45, 48].includes(code)) return "🌫️";
+      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
+      if ([61, 63, 65, 80, 81, 82].includes(code)) return "🌧️";
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
+      if ([95, 96, 99].includes(code)) return "⛈️";
+      return "🌤️";
+    }
+
+    async function reverseGeo(lat, lon) {
+      const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data?.results?.[0]?.name || "Your Location";
+    }
+
+   async function reverseGeo(lat, lon) {
+  const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data?.results?.[0]?.name || "Your Location";
+}
+
+async function loadWeather(lat, lon) {
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,relative_humidity_2m,precipitation,weather_code` +
+    `&hourly=temperature_2m,weather_code` +
+    `&timezone=auto`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const currentTemp = Math.round(data.current.temperature_2m);
+  const currentHumidity = data.current.relative_humidity_2m;
+  const currentRain = data.current.precipitation;
+  const currentCode = data.current.weather_code;
+
+  tempEl.textContent = currentTemp;
+  humidityEl.textContent = currentHumidity + "%";
+  rainingEl.textContent = currentRain > 0 ? "YES" : "NO";
+
+  mainIconEl.textContent = weatherEmoji(currentCode);
+
+  alertEl.textContent = currentRain > 0 ? "Raining now 🌧️" : "Weather stable ✅";
+  noteEl.textContent = `Live Weather Loaded ✅`;
+
+  // hourly
+  hourlyEl.innerHTML = "";
+  const times = data.hourly.time;
+  const temps = data.hourly.temperature_2m;
+  const codes = data.hourly.weather_code;
+
+  const now = new Date();
+  let startIndex = times.findIndex(t => new Date(t) >= now);
+  if (startIndex < 0) startIndex = 0;
+
+  for (let i = startIndex; i < startIndex + 6; i++) {
+    const hourBox = document.createElement("div");
+    hourBox.className = "hour";
+    hourBox.innerHTML = `
+      <div class="t">${formatHour(times[i])}</div>
+      <div class="icon">${weatherEmoji(codes[i])}</div>
+      <div class="deg">${Math.round(temps[i])}°</div>
+    `;
+    hourlyEl.appendChild(hourBox);
+  }
+
+  updatedAtEl.textContent = "Updated: " + new Date().toLocaleTimeString();
+}
+
+function startRealtimeWeather() {
+  cityEl.textContent = "Detecting...";
+  alertEl.textContent = "Requesting GPS permission...";
+  updatedAtEl.textContent = "Waiting for location...";
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      console.log("GPS OK ✅", pos.coords);
+
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      cityEl.textContent = await reverseGeo(lat, lon);
+      await loadWeather(lat, lon);
+
+      setInterval(() => loadWeather(lat, lon), 5 * 60 * 1000);
+    },
+
+    (err) => {
+      console.log("GPS ERROR ❌", err);
+
+      // This will show EXACT error message
+      cityEl.textContent = "GPS Failed ❌";
+
+      alertEl.textContent =
+        err.code === 1 ? "Permission Denied" :
+        err.code === 2 ? "Position Unavailable" :
+        err.code === 3 ? "Timeout" :
+        "Unknown error";
+
+      noteEl.textContent = "GPS failed. Using manual fallback is recommended.";
+      updatedAtEl.textContent = "No live weather";
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0
+    }
+  );
+}
+
+startRealtimeWeather();
+
+    // ===============================
+    // DEMO BUTTON ACTIONS
+    // ===============================
+    const waterTimer = document.getElementById("waterTimer");
+    const fertTimer  = document.getElementById("fertTimer");
+
+    document.getElementById("waterStart").onclick = () => {
+      waterTimer.style.outline = "3px solid rgba(34,197,94,0.6)";
+    };
+    document.getElementById("waterStop").onclick = () => {
+      waterTimer.style.outline = "3px solid rgba(239,68,68,0.6)";
+    };
+
+    document.getElementById("fertStart").onclick = () => {
+      fertTimer.style.outline = "3px solid rgba(34,197,94,0.6)";
+    };
+    document.getElementById("fertStop").onclick = () => {
+      fertTimer.style.outline = "3px solid rgba(239,68,68,0.6)";
+    };
+
+    document.getElementById("actionWater").onclick = () => {
+      alert("WATER action ✅");
+    };
+
+    document.getElementById("actionFert").onclick = () => {
+      alert("FERTILIZER action ✅");
+    };
+  </script>
+
+</body>
+</html>
